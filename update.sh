@@ -35,7 +35,7 @@ fi
 # 2. Rebuild kalau ada perubahan code/composer/Dockerfile (hemat: cek file)
 if git diff --name-only HEAD~1 | grep -E "(composer|Dockerfile|docker-compose|supervisor|php.ini|nginx.conf)"; then
     echo -e "$$ {YELLOW}Deteksi perubahan config/code. Rebuild... $${NC}"
-    docker-compose -f $COMPOSE_FILE build --no-cache $SERVICE_BUILD
+    docker compose -f $COMPOSE_FILE build --no-cache $SERVICE_BUILD
     if [ $? -ne 0 ]; then
         echo -e "$$ {RED}Build gagal! Exit. $${NC}"
         exit 1
@@ -47,7 +47,7 @@ fi
 
 # 3. Up -d (restart service)
 echo -e "$$ {YELLOW}Restarting services... $${NC}"
-docker-compose -f $COMPOSE_FILE up -d
+docker compose -f $COMPOSE_FILE up -d
 if [ $? -ne 0 ]; then
     echo -e "$$ {RED}Up -d gagal! Exit. $${NC}"
     exit 1
@@ -56,14 +56,14 @@ echo -e "$$ {GREEN}Services up. $${NC}"
 
 # 4. Clear cache Laravel (cepat)
 echo -e "$$ {YELLOW}Clearing Laravel cache... $${NC}"
-docker-compose -f $COMPOSE_FILE exec -T app php artisan config:clear || true
-docker-compose -f $COMPOSE_FILE exec -T app php artisan route:clear || true
-docker-compose -f $COMPOSE_FILE exec -T app php artisan cache:clear || true
+docker compose -f $COMPOSE_FILE exec -T app php artisan config:clear || true
+docker compose -f $COMPOSE_FILE exec -T app php artisan route:clear || true
+docker compose -f $COMPOSE_FILE exec -T app php artisan cache:clear || true
 echo -e "$$ {GREEN}Cache cleared. $${NC}"
 
 # 5. Cek status singkat
 echo -e "$$ {YELLOW}Status services: $${NC}"
-docker-compose -f $COMPOSE_FILE ps
+docker compose -f $COMPOSE_FILE ps
 
 # 6. Opsional: Prune kalau mau bersih (komentar kalau nggak)
 # echo -e "$$ {YELLOW}Pruning unused... $${NC}"
