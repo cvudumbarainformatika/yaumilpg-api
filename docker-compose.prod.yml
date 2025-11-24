@@ -1,0 +1,96 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: yaumi_app
+    ports:
+      - "9001:9000"
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - COMPOSER_ALLOW_SUPERUSER=1
+    volumes:
+        - /opt/env/yaumi/.env.production:/var/www/.env:ro
+        - ./docker-compose/php/php.prod.ini:/usr/local/etc/php/php.ini:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pgrep", "php-fpm"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - default
+      - yaumi_shared
+
+  nginx:
+    build:
+      context: ./docker-compose/nginx
+      dockerfile: Dockerfile.prod
+    container_name: yaumi_nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "8182:80"
+    volumes:
+      - ./:/var/www:ro
+    networks:
+      - default
+      - yaumi_shared
+
+  mysql:
+    image: mysql:8.0
+    container_name: yaumilpg_mysql
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: yaumi_db
+      MYSQL_ROOT_PASSWORD: harry141312
+      MYSQL_PASSWORD: harry141312
+      MYSQL_USER: harry
+    volumes:
+      - dbdata:/var/lib/mysql/
+      - ./docker-compose/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - default
+      - yaumi_shared
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pharry141312"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  redis:
+    image: redis:alpine
+    container_name: yaumi_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - default
+      - yaumi_shared
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  default:
+  yaumi_shared:
+    external: true
+
+volumes:
+  dbdata:
+  redis_data:

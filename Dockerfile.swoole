@@ -1,0 +1,96 @@
+FROM php:8.3-cli
+
+# Arguments defined in docker-compose.yml
+ARG user
+ARG uid
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    supervisor \
+    zip \
+    unzip \
+    openssl \
+    procps \
+    libbrotli-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    sockets
+
+# Configure and install Swoole
+RUN pecl install swoole && \
+    docker-php-ext-enable swoole
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Create system user
+RUN useradd -G www-data,root -u $uid -d /home/$user $user
+RUN mkdir -p /home/$user/.composer && \
+    chown -R $user:$user /home/$user
+
+# Set working directory
+WORKDIR /var/www
+
+# Copy application files with dynamic user
+COPY --chown=${user}:${user} . .
+
+# Switch to root for dependencies installation
+USER root
+
+# Install dependencies and Octane
+RUN composer install --no-interaction --no-scripts
+RUN composer require laravel/octane --with-all-dependencies
+
+# Install Redis extension for PHP
+RUN pecl install redis && docker-php-ext-enable redis
+
+# Create necessary directories for supervisor
+RUN mkdir -p /var/log/supervisor /var/run/supervisor /etc/supervisor/conf.d && \
+    chmod -R 755 /var/log/supervisor /var/run/supervisor && \
+    chown -R root:root /var/log/supervisor /var/run/supervisor
+
+# Copy supervisor configuration
+COPY docker-compose/php/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Set application permissions
+RUN chown -R $user:$user /var/www
+
+# Stay as root for supervisor
+# Remove the USER $user line
+
+# Set proper permissions for supervisor
+RUN chmod 755 /var/run/supervisor
+RUN chmod 755 /var/log/supervisor
+
+# Set proper permissions
+RUN chown -R $user:$user /var/www
+RUN chown -R $user:$user /var/log/supervisor
+RUN chown -R $user:$user /var/run/supervisor
+
+# Switch back to application user
+USER $user
+
+EXPOSE 8000
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Change the CMD to use supervisor instead
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
