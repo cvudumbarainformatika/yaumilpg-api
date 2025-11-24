@@ -13,7 +13,7 @@ services:
       - APP_ENV=production
       - COMPOSER_ALLOW_SUPERUSER=1
     volumes:
-        - /opt/env/yaumi/.env.production:/var/www/.env:ro
+        - ./.env.production:/var/www/.env:ro
         - ./docker-compose/php/php.prod.ini:/usr/local/etc/php/php.ini:ro
     depends_on:
       mysql:

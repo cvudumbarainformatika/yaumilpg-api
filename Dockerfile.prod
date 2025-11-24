@@ -64,6 +64,13 @@ RUN chmod -R 755 /var/log/supervisor /var/run/supervisor && \
 USER $user
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
+# Copy dan setup entrypoint script
+COPY --chown=$user:$user docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Set entrypoint (wrap CMD)
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
 EXPOSE 9000
 
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
