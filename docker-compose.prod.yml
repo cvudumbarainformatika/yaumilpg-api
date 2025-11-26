@@ -13,11 +13,7 @@ services:
       - APP_ENV=production
       - COMPOSER_ALLOW_SUPERUSER=1
     volumes:
-        - ./app:/var/www/html/app
-        - ./routes:/var/www/html/routes
-        - ./resources:/var/www/html/resources
-        - ./composer.json:/var/www/html/composer.json
-        - ./composer.lock:/var/www/html/composer.lock
+        - ./:/var/www
         - ./.env.production:/var/www/.env:ro
         - ./docker-compose/php/php.prod.ini:/usr/local/etc/php/php.ini:ro
     depends_on:
@@ -45,7 +41,7 @@ services:
     ports:
       - "8182:80"
     volumes:
-      - ./:/var/www/html:ro   # mount root project Laravel
+      - ./:/var/www:ro   # mount root project Laravel
     networks:
       - default
       - yaumi_shared
