@@ -13,6 +13,11 @@ services:
       - APP_ENV=production
       - COMPOSER_ALLOW_SUPERUSER=1
     volumes:
+        - ./app:/var/www/html/app
+        - ./routes:/var/www/html/routes
+        - ./resources:/var/www/html/resources
+        - ./composer.json:/var/www/html/composer.json
+        - ./composer.lock:/var/www/html/composer.lock
         - ./.env.production:/var/www/.env:ro
         - ./docker-compose/php/php.prod.ini:/usr/local/etc/php/php.ini:ro
     depends_on:
