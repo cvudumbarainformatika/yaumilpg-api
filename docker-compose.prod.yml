@@ -52,7 +52,7 @@ services:
     ports:
       - "3307:3306"
     environment:
-      MYSQL_DATABASE: yaumi_db
+      MYSQL_DATABASE: yaumilpg_db
       MYSQL_ROOT_PASSWORD: harry141312
       MYSQL_PASSWORD: harry141312
       MYSQL_USER: harry
