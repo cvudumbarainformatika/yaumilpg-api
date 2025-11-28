@@ -7,7 +7,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::get('/autogen', function () {
-    echo 'SELAMAT DATANG DI TOKO LPG Yaumi Backend OK!';
+    echo 'SELAMAT DATANG DI TOKO LPG YAUMI BACKEND OK!';
 });
 
 Route::get('/delete-all-indexes', function () {
